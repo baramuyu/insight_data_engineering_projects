@@ -33,7 +33,7 @@ Occupancy data and Transaction data are from Seattle.gov.
 
 ### User Interface
 
-![alt text](baramuyu/insight_data_engineering_projects/blob/master/images/interface.jpg "UI")
+![alt text](images/interface.jpg "UI")
 
 #### Input
 * Where will you be?
