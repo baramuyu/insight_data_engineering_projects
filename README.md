@@ -78,14 +78,14 @@
 #### Technical challenge 
 
 ##### Joining Meta Data
-* To find cost; depend on area and time. 
+* To find parking fee for specific place and time; it depends on area and time. 
 * To eliminate temporary-not-available parking lot.
 
 ##### Response time on UI
 * Start searching from closer parking spots - then expand search area if there are no available spots near the user.
 
 ##### Grouping parking spots by area
-* To give users result with area - driver likes to go circle to find a spot.
+* To give users result with area instead of scattered available spots - driver likes to go circle to find a spot.
 
 
 ### MVP
