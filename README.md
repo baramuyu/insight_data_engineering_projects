@@ -6,10 +6,10 @@
 
 ## Data Source
 
-#### Street Parking Occupancy data 
-Granularity of the data is by minute
-About 290 millions records in last year. (~45GB)
-Total 1.4 billions records since 2012. (~320GB)
+#### Street Parking Occupancy data (Processed data)
+* Granularity of the data is by minute.
+* About 290 millions records in a year. (~45GB)
+* Approx total 1.4 billions records since 2012. (~320GB)
 
 | TimeStamp        | StationID | Street Name |  # Occupaid spots           | # Total spots  | Max Park Mins
 | ------------- |:-------------|:-----| -----:| -----:| -----:|
@@ -17,8 +17,9 @@ Total 1.4 billions records since 2012. (~320GB)
 | 2019 Jan 02 08:42:00 AM      | 1 | 1ST AVE N BETWEEN JOHN ST AND THOMAS ST | 2 | 4 | 120
 | 2019 Jan 02 08:42:00 AM      | 2 | SPRING ST BETWEEN 8TH AVE AND 9TH AVE | 4 | 5 | 30
 
-#### Street Parking Transaction data
-Year 2012 to yesterday 
+#### Street Parking Transaction data (Raw data)
+* Abount 13 millions records in a year. (~11.1GB)
+* Approx total 90 millions records since 2012. (~80GB)
 
 | TimeStamp | Station ID | Amount $ | Paid Duration(sec)
 |:----------|:---------------|---------:|--------------:|
@@ -28,8 +29,8 @@ Year 2012 to yesterday
 
 
 ### How to get data?
-CSV is downloadable from website or API.
-Occupancy data and Transaction data are from Seattle.gov.
+* CSV is downloadable from website or API.
+* Occupancy data and Transaction data are from Seattle.gov.
 
 ### User Interface
 
@@ -53,20 +54,23 @@ Occupancy data and Transaction data are from Seattle.gov.
 
 
 ### Workflow
-Airflow will manage DAG.
-#### Historical Data
+* Airflow will manage DAG.
 
-##### S3 -> Spark-> HDFS and PostgresSQL 
+#### S3 -> Spark-> TimescaleDB
+###### Occupancy data (historical)
 * Grouping parking spots by area
-* Aggregate to 5 mins granularity
+* Aggregate to 5 mins granularity (if needed)
 * Calcurate average # of available spots in the past at same day, time.
 
-#### Latest transaction data
-##### API -> (Kafka?) -> Spark -> HDFS and PostgreSQL
-* Count # of cars left/arrive in 5 min window
+###### Transaction data (historical)
+* Count # of cars left/arrive in 10 min window
 * Calcurate turn over rate
 
-##### Frontend -> Query to PostgreSQL -> Frontend
+#### Scripts -> CSV -> (Kafka?) -> Spark -> TimescaleDB
+###### Real-Time transaction data (simulate)
+* Transform to occupancy data
+
+#### Frontend -> Query to TimescaleDB -> Frontend
 * Query pre-calcrated answer
 * Query how many available spot right now
 * Get summary data as Json format to show it in a data visualization.
@@ -89,5 +93,9 @@ Airflow will manage DAG.
 * Data: Find trend from data of last year.
 * Output: Show the list of available spots based on historical data.
 
+### Stretch Goals
+* Scale for 1k search requests simultaneously.
+* Enable to analyze amount of parking spots overtime (2012 - 2019)
+* Adding crime data to avoid parking at unsafe neighborhoods - away from break-in and assault.
 
 
