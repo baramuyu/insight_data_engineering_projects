@@ -56,6 +56,8 @@
 ### Workflow
 * Airflow will manage DAG.
 
+![alt text](images/Week1Archtechture.jpg "workflow")
+
 #### S3 -> Spark-> TimescaleDB
 ###### Occupancy data (historical)
 * Grouping parking spots by area
