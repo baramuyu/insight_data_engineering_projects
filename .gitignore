@@ -1,3 +1,5 @@
 i_env
 bin
 run_spark.py
+create_table_hist_occupancy.sql
+

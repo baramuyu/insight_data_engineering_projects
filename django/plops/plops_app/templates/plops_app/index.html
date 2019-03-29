@@ -1,0 +1,8 @@
+<p>Here is my app!</p>
+{% if latest_question_list %}
+    <ul>
+        {{ latest_question_list }}
+    </ul>
+{% else %}
+    <p>No polls are available.</p>
+{% endif %}
