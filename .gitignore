@@ -1,4 +1,7 @@
+# folders
 i_env
 bin
+stale
+# files
 run_spark.py
-
+.git-commit-template.txt

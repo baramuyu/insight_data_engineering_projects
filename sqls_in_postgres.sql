@@ -9,6 +9,7 @@ occupancy=> \d+ spark_output_occupancy
 
 CREATE EXTENSION postgis;
 ALTER TABLE hist_occupancy ADD COLUMN location_geom geometry(POINT,2163);
+ALTER TABLE hist_occupancy DROP COLUMN location;
 
 occupancy=> \d+ hist_occupancy;
                                             Table "public.hist_occupancy"
@@ -35,3 +36,6 @@ select ST_Distance(
 INSERT INTO hist_occupancy 
 SELECT timestamp, occupancy, station_id, ST_GeomFromText(location, 2163) 
 FROM spark_output_occupancy;
+
+
+SELECT create_hypertable('hist_occupancy', 'timestamp', chunk_time_interval => interval '30 day');
