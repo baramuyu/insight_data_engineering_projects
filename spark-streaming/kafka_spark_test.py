@@ -7,8 +7,10 @@ import json
 from collections import OrderedDict
 from pyspark.sql import functions as F
 
+import process_streaming
+
 sc = pyspark.SparkContext().getOrCreate()
-ssc = pyspark.streaming.StreamingContext(sc, 10)
+ssc = pyspark.streaming.StreamingContext(sc, 30)
 sc.setLogLevel("ERROR") # use DEBUG when you have a problem
 
 
@@ -54,10 +56,7 @@ def get_schema():
     return ", ".join(["{} {}".format(col, type) for col, type in config_schema])
 
 def process(rdd):
-    df = spark.read.csv(rdd, header=False, schema=get_schema(), mode='FAILFAST')
-    df = df.select('transaction_timestamp','station_id','paid_duration','amount_usd')
-    df = df.withColumn('transaction_timestamp', F.to_timestamp(df.transaction_timestamp, format="MM/dd/yyyy HH:mm:ss"))
-    df.show()
+    process_streaming.run(spark, rdd) 
 
     
 lines = kafkaStream.map(lambda x: x[0])
