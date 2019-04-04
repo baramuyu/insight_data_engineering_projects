@@ -37,5 +37,11 @@ INSERT INTO hist_occupancy
 SELECT timestamp, occupancy, station_id, ST_GeomFromText(location, 2163) 
 FROM spark_output_occupancy;
 
+GRANT select ON hist_occupancy TO spark_user, web_server
+
 
 SELECT create_hypertable('hist_occupancy', 'timestamp', chunk_time_interval => interval '30 day');
+
+// dim_stations;
+ALTER TABLE dim_stations ADD COLUMN location_geom geometry(POINT,2163);
+UPDATE dim_stations SET location_geom = ST_GeomFromText(location, 2163);

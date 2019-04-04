@@ -5,3 +5,5 @@ stale
 # files
 run_spark.py
 .git-commit-template.txt
+db.sqlite3
+.ipynb_checkpoints
