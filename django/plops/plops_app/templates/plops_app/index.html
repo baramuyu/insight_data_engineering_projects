@@ -1,13 +1,31 @@
-<p>Here is my app!</p>
-{% if results %}
-    <ul>
-    {% for rec in results %}
-        {{ rec }}<br>
-    {% empty %}
-        Nothing found
-    {% endfor %}
-    </ul>
+{% load static %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>PLOPS</title>
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="{% static "plops_app/index.css" %}">
+    <script src="{% static "plops_app/index.js" %}"></script>
+    <style>
 
-{% else %}
-    <p>No polls are available.</p>
-{% endif %}
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    {% if results %}
+        <ul>
+        {% for rec in results %}
+            {{ rec }}<br>
+        {% empty %}
+            Nothing found
+        {% endfor %}
+        </ul>
+
+    {% else %}
+        <p>No data is available.</p>
+    {% endif %}
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmNdArjF7FIWi77hBu3AGvkuXOqLE9rLo&callback=initMap"
+    async defer></script>
+  </body>
+</html>

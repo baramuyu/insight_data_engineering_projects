@@ -1,0 +1,13 @@
+<p>Here is my app!</p>
+{% if results %}
+    <ul>
+    {% for rec in results %}
+        {{ rec }}<br>
+    {% empty %}
+        Nothing found
+    {% endfor %}
+    </ul>
+
+{% else %}
+    <p>No polls are available.</p>
+{% endif %}
