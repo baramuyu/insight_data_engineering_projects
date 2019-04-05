@@ -32,7 +32,7 @@ def placeholder(spark, rdd):
         ('meter_id', 'INT'),
         ('transaction_id', 'INT'),
         ('transaction_timestamp', 'STRING'),
-        ('amount_usd', 'INT'),
+        ('amount_usd', 'DOUBLE'),
         ('usernumber', 'STRING'),
         ('payment_mean', 'STRING'),
         ('paid_duration', 'INT'),
@@ -43,7 +43,7 @@ def placeholder(spark, rdd):
     ]
     schema = ", ".join(["{} {}".format(col, type) for col, type in config_schema])
 
-    tr_df = spark.read.csv(rdd, header=False, schema=schema, mode='PERMISSIVE')
+    tr_df = spark.read.csv(rdd, header=False, schema=schema, mode='FAILFAST')
 
     print("tr_df.count()", tr_df.count())
     if tr_df.count() == 0:
@@ -128,7 +128,7 @@ def placeholder(spark, rdd):
           )
 
     occupancy_per_minute = spark.sql(sql)
-    occupancy_per_minute.show(100)
+    occupancy_per_minute.show(10)
 
     if occupancy_per_minute.count() > 0:
         table = "live_occupancy"
