@@ -9,9 +9,12 @@ from pyspark.sql import SparkSession
 from pyspark.sql import DataFrameWriter
 
 import os
+from datetime import datetime
 
 def placeholder(spark, rdd):
     
+    print("*** PROCESS START***** ")
+    print(datetime.now().isoformat())
     
     database_name = 'occupancy'
     hostname = 'ec2-52-39-242-144.us-west-2.compute.amazonaws.com'
@@ -69,10 +72,10 @@ def placeholder(spark, rdd):
     # In[351]:
 
 
-    table = "active_transactions"
-    mode = "overwrite"
-    my_writer = DataFrameWriter(tr_df)
-    my_writer.jdbc(url_connect, table, mode, properties)
+#     table = "active_transactions"
+#     mode = "overwrite"
+#     my_writer = DataFrameWriter(tr_df)
+#     my_writer.jdbc(url_connect, table, mode, properties)
 
 
     # In[352]:
