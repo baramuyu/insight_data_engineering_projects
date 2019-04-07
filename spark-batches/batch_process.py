@@ -50,11 +50,11 @@ class ProcessHistOccupancyData(object):
         return self.spark.read.csv(file_name, header=True, mode=mode, schema=self.schema)
 
     def manipulate_df(self, csv_df):
-        df = csv_df.select(*self.col_select)\
-                    .dropDuplicates()
+        df = csv_df.select(*self.col_select)
         df = df.withColumn("timestamp", F.to_timestamp(df.timestamp, format="mm/dd/yyyy hh:mm:ss a"))
         df = df.withColumn('day_of_week', F.dayofweek(df.timestamp)) \
-                .withColumn('hour', F.hour(df.timestamp))
+                .withColumn('hour', F.hour(df.timestamp)) \
+                .dropDuplicates(['timestamp', 'station_id'])
         return df
     
     def write_to_postgres(self, out_df):
