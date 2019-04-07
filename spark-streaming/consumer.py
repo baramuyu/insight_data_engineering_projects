@@ -55,7 +55,7 @@ class KafkaConsumer(object):
 
     def run(self):
         def _process_rdd(rdd):
-            process_streaming.run(self.spark, rdd) 
+            process_trans.run(self.spark, rdd) 
         
         print ("Start consuming datastream")
 
