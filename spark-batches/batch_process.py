@@ -58,19 +58,19 @@ class ProcessHistOccupancyData(object):
     def write_to_postgres(self, out_df):
         table = "spark_output_occupancy"
         mode = "overwrite"
-        print(postgres)
+        
         connector = postgres.PostgresConnector()
         connector.write(out_df, table, mode)
 
     def run(self):
         csv_df = self.read_csv_from_s3()
+        csv_df.printSchema()
+        
         out_df = self.manipulate_df(csv_df)
-        if DEBUG:
-            print("csv_df")
-            csv_df.printSchema()
-            print("out_df")
-            out_df.printSchema()
+        out_df.printSchema()
+        
         self.write_to_postgres(out_df)
+        
         print("Batch process finished.")
 
 def run():
