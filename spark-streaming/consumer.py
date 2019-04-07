@@ -11,7 +11,7 @@ from pyspark.sql import (functions as F,
 from pyspark.streaming.kafka import KafkaUtils, TopicAndPartition
 
 import json
-import trans_streaming
+import process_trans
 
 class KafkaConsumer(object):
     def __init__(self):
@@ -55,8 +55,8 @@ class KafkaConsumer(object):
 
     def run(self):
         def _process_rdd(rdd):
-            process_trans.run(self.spark, rdd) 
-        
+            process_trans.ProcessTrans(self.spark, rdd).run()
+            
         print ("Start consuming datastream")
 
         kafkaStream = self.get_kafkaStream()
