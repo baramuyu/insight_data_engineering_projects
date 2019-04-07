@@ -10,7 +10,7 @@ class ProcessHistOccupancyData(object):
     def __init__(self, file_name):
         self.spark = SparkSession \
             .builder \
-            .appName("plops") \
+            .appName("plops_batch") \
             .getOrCreate()
         
         schema_list = [
@@ -44,20 +44,22 @@ class ProcessHistOccupancyData(object):
         file_name = "s3a://project.datasets/{file_name}".format(file_name=self.file_name)
         mode = "PERMISSIVE"
         if DEBUG:
-            file_name = "s3a://project.datasets/small_data/last_48h.csv.gz"  # smaller file
             mode = "FAILFAST"
+        
+        print('reading file: ' + file_name)
         return self.spark.read.csv(file_name, header=True, mode=mode, schema=self.schema)
 
     def manipulate_df(self, csv_df):
-        df = csv_df.select(*self.col_select)
+        df = csv_df.select(*self.col_select)\
+                    .dropDuplicates()
         df = df.withColumn("timestamp", F.to_timestamp(df.timestamp, format="mm/dd/yyyy hh:mm:ss a"))
         df = df.withColumn('day_of_week', F.dayofweek(df.timestamp)) \
                 .withColumn('hour', F.hour(df.timestamp))
         return df
     
     def write_to_postgres(self, out_df):
-        table = "spark_output_occupancy"
-        mode = "overwrite"
+        table = "hist_occupancy"
+        mode = "append"
         
         connector = postgres.PostgresConnector()
         connector.write(out_df, table, mode)
@@ -78,9 +80,11 @@ def run():
     parser.add_argument("--debug", help="debug mode, loads small test file.", action="store_true")
     parser.add_argument("--file", help="file name to process")
     args = parser.parse_args()
-    DEBUG = True if args.debug else False
+    
     file_name = args.file if args.file else "2019-Paid-Parking-Occupancy.csv.gz"
-
+    if args.debug:
+        DEBUG = True 
+        file_name = 'small_data/last_48h.csv.gz' # smaller file
     proc = ProcessHistOccupancyData(file_name)
     proc.run()
 
