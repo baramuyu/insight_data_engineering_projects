@@ -12,18 +12,6 @@
   </head>
   <body>
     <div id="map"></div>
-    {% if results %}
-        <ul>
-        {% for rec in results %}
-            {{ rec }}<br>
-        {% empty %}
-            Nothing found
-        {% endfor %}
-        </ul>
-
-    {% else %}
-        <p>No data is available.</p>
-    {% endif %}
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmNdArjF7FIWi77hBu3AGvkuXOqLE9rLo&callback=initMap"
     async defer></script>
   </body>
