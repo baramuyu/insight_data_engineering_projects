@@ -16,13 +16,14 @@ import process_trans
 class KafkaConsumer(object):
     def __init__(self):
         batchDuration = 10
-        self.sec_window = 180
-        self.sec_slide = 20
+#         self.sec_window = 180
+#         self.sec_slide = 20
         
         self.sc = SparkContext().getOrCreate()
-        self.ssc = StreamingContext(self.sc, batchDuration)
         self.sc.setLogLevel("ERROR") # use DEBUG when you have a problem
-        
+
+        self.ssc = StreamingContext(self.sc, batchDuration)
+
         self.spark = SparkSession \
         .builder \
         .appName("plops_streaming") \
@@ -31,7 +32,7 @@ class KafkaConsumer(object):
         self.conf = self.get_kafka_consumer_setting()
 
     def get_kafka_consumer_setting(self):
-        return {'brokers': '10.0.0.8:9092',
+        return {'brokers': '10.0.0.8:9092, 10.0.0.5:9092',
                      'topic': 'paid-transaction',
                      'n_partitions': 2,
                      'offset_0': 0,
@@ -60,13 +61,16 @@ class KafkaConsumer(object):
         print ("Start consuming datastream")
 
         kafkaStream = self.get_kafkaStream()
-        lines = kafkaStream.window(self.sec_window, self.sec_slide)\
-                           .map(lambda x: x[0]) # retrieve value
+#         lines = kafkaStream.window(self.sec_window, self.sec_slide)\
+#                            .map(lambda x: x[0]) # retrieve value
+        lines = kafkaStream.map(lambda x: x[0]) # retrieve value
         lines.pprint()
         lines.foreachRDD(_process_rdd)
 
         self.ssc.start()
         self.ssc.awaitTermination()
+        
+        
 
 
 consumer = KafkaConsumer()

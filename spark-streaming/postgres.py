@@ -16,11 +16,11 @@ class PostgresConnector(object):
     def set_spark(self, spark):
         self.spark = spark
         
-    def get_writer(self, df):
+    def _get_writer(self, df):
         return DataFrameWriter(df)
         
     def write(self, df, table, mode):
-        my_writer = self.get_writer(df)
+        my_writer = self._get_writer(df)
         my_writer.jdbc(self.url_connect, table, mode, self.properties)
         
     def read(self, table):

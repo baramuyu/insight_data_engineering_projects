@@ -17,7 +17,7 @@ class ProcessTrans(object):
         self.spark = spark
         self.rdd = rdd
         self.pgres_connector = postgres.PostgresConnector()
-        
+
     def get_schema(self):
         schema = [
             ('data_id', 'INT'),
@@ -56,15 +56,17 @@ class ProcessTrans(object):
         # load
         self.pgres_connector.set_spark(self.spark)
         old_trans_df = self.pgres_connector.read(table)
+        # intended to deep copy of dataframe
+        old_trans_df = self.spark.createDataFrame(old_trans_df.collect()) 
         
         # merge and filter out old transactions
         trans_df = trans_df.union(old_trans_df)
-        trans_df = trans_df.filter(trans_df.transaction_endtime > datetime_now)
+        latest_trans_df = trans_df.filter(trans_df.transaction_endtime > datetime_now)
         
         # save
         mode = "overwrite"
-        self.pgres_connector.write(trans_df, table, mode)
-        return trans_df
+        self.pgres_connector.write(latest_trans_df, table, mode)
+        return latest_trans_df
     
     def get_lastest_minutes(self, trans_df):
         trans_df.createOrReplaceTempView("occupancy_streaming")
