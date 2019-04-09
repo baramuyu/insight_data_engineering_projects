@@ -15,7 +15,7 @@ import process_trans
 
 class KafkaConsumer(object):
     def __init__(self):
-        batchDuration = 20
+        batchDuration = 10
         
         self.sc = SparkContext().getOrCreate()
         self.sc.setLogLevel("ERROR") # use DEBUG when you have a problem
@@ -47,8 +47,6 @@ class KafkaConsumer(object):
         return fromOffsets
         
     def run(self):
-        
-        
         def _updateFunction(newValues, lastValues):
             return process_trans.updateState(newValues, lastValues)
         
@@ -59,7 +57,8 @@ class KafkaConsumer(object):
                 print ("no data")
             
         def _update_db(rdd):
-            process_trans.ProcessTrans().update_db(rdd)
+            if rdd.count() > 0:
+                process_trans.ProcessTrans().update_db(rdd)
             
         print ("Start consuming datastream")
 

@@ -63,11 +63,10 @@ class ProcessTrans(object):
         trans_df.createOrReplaceTempView("transactions")
         ocp_df.createOrReplaceTempView("occupancy_perminute")
 
-        sql = ("SELECT p.station_id, p.timestamp, CAST(count(*) as int) AS occupied_spots "
+        sql = ("SELECT p.station_id, CAST(count(t.station_id) as int) AS occupied_spots "
                "FROM occupancy_perminute p LEFT OUTER JOIN transactions t "
                "ON p.station_id = t.station_id "
-               "AND p.timestamp < t.transaction_endtime "
-               "GROUP BY p.station_id, p.timestamp"
+               "GROUP BY p.station_id "
               )
         return self.spark.sql(sql)
         
@@ -91,6 +90,9 @@ class ProcessTrans(object):
         ocp_df = self.create_occupancy_df(dim_df)
         occupancy_per_min_df = self.calc_occupancy_per_minute(trans_df, ocp_df)
 
+        self.pgres_connector.write(ocp_df, "ocp", "overwrite")
+        self.pgres_connector.write(trans_df, "trans", "overwrite")
+        
         if occupancy_per_min_df.count() > 0:
             table = "live_occupancy"
             mode = "overwrite"
