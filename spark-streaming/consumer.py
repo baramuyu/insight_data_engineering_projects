@@ -12,11 +12,10 @@ from pyspark.streaming.kafka import KafkaUtils, TopicAndPartition
 
 import json
 import process_trans
-import process_trans_with_state
 
 class KafkaConsumer(object):
     def __init__(self):
-        batchDuration = 10
+        batchDuration = 20
         
         self.sc = SparkContext().getOrCreate()
         self.sc.setLogLevel("ERROR") # use DEBUG when you have a problem
@@ -48,15 +47,30 @@ class KafkaConsumer(object):
         return fromOffsets
         
     def run(self):
-        def _process_rdd(rdd):
-            process_trans.ProcessTrans(rdd).run()
+        
+        
+        def _updateFunction(newValues, lastValues):
+            return process_trans.updateState(newValues, lastValues)
+        
+        def _transform_rdd(rdd):
+            if rdd:
+                return process_trans.ProcessTrans().transform(rdd)
+            else:
+                print ("no data")
+            
+        def _update_db(rdd):
+            process_trans.ProcessTrans().update_db(rdd)
             
         print ("Start consuming datastream")
 
         kafkaStream = self.get_kafkaStream()
         trans = kafkaStream.map(lambda x: x[0]) # retrieve value
-        trans.pprint()
-        trans.foreachRDD(_process_rdd)
+        
+        trans = trans.transform(_transform_rdd)
+        state = trans.map(lambda trans: (trans, trans[0])).updateStateByKey(_updateFunction)
+        
+        state.pprint()
+        state.map(lambda x: x[0]).foreachRDD(_update_db)
 
         self.ssc.start()
         self.ssc.awaitTermination()
