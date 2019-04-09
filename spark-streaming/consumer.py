@@ -12,23 +12,18 @@ from pyspark.streaming.kafka import KafkaUtils, TopicAndPartition
 
 import json
 import process_trans
+import process_trans_with_state
 
 class KafkaConsumer(object):
     def __init__(self):
         batchDuration = 10
-#         self.sec_window = 180
-#         self.sec_slide = 20
         
         self.sc = SparkContext().getOrCreate()
         self.sc.setLogLevel("ERROR") # use DEBUG when you have a problem
 
         self.ssc = StreamingContext(self.sc, batchDuration)
-
-        self.spark = SparkSession \
-        .builder \
-        .appName("plops_streaming") \
-        .getOrCreate()
-        
+        self.ssc.checkpoint("hdfs://10.0.0.11:9000/checkpoint")
+    
         self.conf = self.get_kafka_consumer_setting()
 
     def get_kafka_consumer_setting(self):
@@ -52,26 +47,19 @@ class KafkaConsumer(object):
                        TopicAndPartition(topic, 0): int(offset_1)}
         return fromOffsets
         
-
-
     def run(self):
         def _process_rdd(rdd):
-            process_trans.ProcessTrans(self.spark, rdd).run()
+            process_trans.ProcessTrans(rdd).run()
             
         print ("Start consuming datastream")
 
         kafkaStream = self.get_kafkaStream()
-#         lines = kafkaStream.window(self.sec_window, self.sec_slide)\
-#                            .map(lambda x: x[0]) # retrieve value
-        lines = kafkaStream.map(lambda x: x[0]) # retrieve value
-        lines.pprint()
-        lines.foreachRDD(_process_rdd)
+        trans = kafkaStream.map(lambda x: x[0]) # retrieve value
+        trans.pprint()
+        trans.foreachRDD(_process_rdd)
 
         self.ssc.start()
         self.ssc.awaitTermination()
         
-        
-
-
 consumer = KafkaConsumer()
 consumer.run()

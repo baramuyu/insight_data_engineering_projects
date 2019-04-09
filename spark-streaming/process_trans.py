@@ -9,15 +9,18 @@ import os
 import postgres
 from pytz import timezone
 from datetime import datetime
-
+from pyspark.sql import SparkSession
 
 class ProcessTrans(object):
     
-    def __init__(self, spark, rdd):
-        self.spark = spark
+    def __init__(self, rdd):
         self.rdd = rdd
         self.pgres_connector = postgres.PostgresConnector()
-
+        self.spark = SparkSession \
+        .builder \
+        .appName("plops_streaming") \
+        .getOrCreate()
+        
     def get_schema(self):
         schema = [
             ('data_id', 'INT'),
@@ -103,6 +106,7 @@ class ProcessTrans(object):
         print(datetime.now().isoformat())     
 
         trans_df = self.read_csv()
+        
         print("trans_df.count()", trans_df.count())
         if trans_df.count() == 0:
             print("no data")
