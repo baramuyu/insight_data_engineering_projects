@@ -45,69 +45,55 @@ class ProcessTrans(object):
         # convert to timestamp and calcurate endtime
         df = df.withColumn("transaction_timestamp", F.to_timestamp(df.transaction_timestamp, format="MM/dd/yyyy HH:mm:ss")) \
                .withColumn("transaction_endtime", (F.unix_timestamp("transaction_timestamp") + df.paid_duration).cast('timestamp'))
-        df = df.select('transaction_endtime', 'station_id')
+        df = df.select('station_id', 'transaction_endtime')
         return df
        
     def get_dimension_table(self):
         self.pgres_connector.set_spark(self.spark)
         dim_df = self.pgres_connector.read(table="dim_stations")
-        dim_df = dim_df.select('station_id').cache()
+        dim_df = dim_df.select('station_id')
         return dim_df
     
     def create_occupancy_df(self, dim_df):
         datetime_now = datetime.now(timezone('America/Los_Angeles')).replace(tzinfo=None)
-        ocp_df = dim_df.withColumn("timestamp", F.lit(datetime_now))
-        return ocp_df
+        all_stations_df = dim_df.withColumn("timestamp", F.lit(datetime_now))
+        return all_stations_df
     
-    def calc_occupancy_per_minute(self, trans_df, ocp_df):
-        trans_df.createOrReplaceTempView("transactions")
-        ocp_df.createOrReplaceTempView("occupancy_perminute")
+    def join_occupancy_df_with_all_stations(self, occupancy_df, all_stations_df):
+        occupancy_df.createOrReplaceTempView("occupancies")
+        all_stations_df.createOrReplaceTempView("all_stations")
 
-        sql = ("SELECT p.station_id, CAST(count(t.station_id) as int) AS occupied_spots "
-               "FROM occupancy_perminute p LEFT OUTER JOIN transactions t "
-               "ON p.station_id = t.station_id "
-               "GROUP BY p.station_id "
+        sql = ("SELECT s.station_id, coalesce(o.occupied_spots, 0) AS occupied_spots, s.timestamp "
+               "FROM all_stations s LEFT JOIN occupancies o "
+               "ON s.station_id = o.station_id "
               )
         return self.spark.sql(sql)
+    
+    def update_output_table(self, live_df):
+        table = "spark_out_live_occupancy"
+        mode = "append"
+        self.pgres_connector.write(live_df, table, mode)
+
+        print("Successfully updated live_occupancy")
+        print(datetime.now().isoformat())  
         
     def transform(self, rdd):
         print("*** TRANSFORM START***** ")
         print(datetime.now().isoformat())     
         
         trans_df = self.read_csv(rdd)
-
         trans_df = self.manipulate_trans(trans_df)
         trans_rdd = trans_df.rdd
         return trans_rdd
         
-        
-    def update_db(self, trans):
+    def update_db(self, occupancy):
         print("*** UPDATE DB START***** ")
-        print(datetime.now().isoformat())     
-
-        trans_df = self.spark.createDataFrame(trans)
-        dim_df = self.get_dimension_table()
-        ocp_df = self.create_occupancy_df(dim_df)
-        occupancy_per_min_df = self.calc_occupancy_per_minute(trans_df, ocp_df)
-
-        self.pgres_connector.write(ocp_df, "ocp", "overwrite")
-        self.pgres_connector.write(trans_df, "trans", "overwrite")
+        print(datetime.now().isoformat())   
         
-        if occupancy_per_min_df.count() > 0:
-            table = "live_occupancy"
-            mode = "overwrite"
-            self.pgres_connector.write(occupancy_per_min_df, table, mode)
-
-            print("Successfully updated live_occupancy")
-            print(datetime.now().isoformat())    
-        else:
-            print ("Occupancy per minute data is empty")
-
-
-def updateState(newValues, lastValues):
-    datetime_now = datetime.now(timezone('America/Los_Angeles')).replace(tzinfo=None)
-    transaction_endtime = newValues or lastValues
-    if transaction_endtime[0] > datetime_now:
-        return transaction_endtime
-    else:
-        return None # delete key
+        occupancy_df = self.spark.createDataFrame(occupancy)
+        dim_df = self.get_dimension_table()
+        all_stations_df = self.create_occupancy_df(dim_df)
+        live_df = self.join_occupancy_df_with_all_stations(occupancy_df, all_stations_df)
+        
+        if live_df.count() > 0:
+            self.update_output_table(live_df)
