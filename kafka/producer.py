@@ -1,48 +1,64 @@
+#!/usr/bin/env python
+# coding: utf-8
+
 from datetime import datetime
 from kafka.producer import KafkaProducer
 import pytz
 import random
 import time
+import json
 
-'''
-Generate real-time transaction data per second and publish to kafka topic.
+producer = KafkaProducer(bootstrap_servers='10.0.0.8:9092,10.0.0.5:9092')
 
-schema from Seattle.gov
-"DataId,MeterCode,TransactionId,TransactionDateTime,Amount,UserNumber,PaymentMean,PaidDuration,ElementKey,TransactionYear,TransactionMonth,Vendor"
-[28085294,10508004,685518869,03/24/2019 23:39:54,2,NULL,CREDIT CARD,7200,81454,2019,3]
-'''
+# get Pacific timezone
+pacific_time = pytz.timezone('America/Los_Angeles')
+fmt = '%m/%d/%Y %H:%M:%S'
+pacific_dt = pacific_time.localize(datetime.utcnow())
 
-class GenerateStreaming():
+# schema from Seattle.gov
+# "DataId,MeterCode,TransactionId,TransactionDateTime,Amount,UserNumber,PaymentMean,PaidDuration,ElementKey,TransactionYear,TransactionMonth,Vendor"
+# [28085294,10508004,685518869,03/24/2019 23:39:54,2,NULL,CREDIT CARD,7200,81454,2019,3]
+
+class GenerateData():
     def __init__(self):
-        self.producer = KafkaProducer(bootstrap_servers='localhost:9092')
         self.increment = 0
-        self.pacific_time = pytz.timezone('America/Los_Angeles')
-        self.fmt = '%Y/%m/%d %H:%M:%S'
         
-        
-    def generate(self):
+    def station_list(self):
+        with open('pay_stations_list.txt', 'r') as f:
+            station_list = f.read().split()
+            station_list = map(int, station_list)
+        return station_list
+    
+    def run(self):
         DataId = self.increment
-        MeterCode = random.choice([7098002, 17143004, 13035002, 18004007, 19294002, 1114002, 10282004, 10348004, 5040102,
-                     18005007, 24001004, 10345002, 19343010, 8052002, 21091004, 21043004, 18016007, 7039002, 12152304])
+        MeterCode = random.choice(self.station_list())
         TransactionId = self.increment
-        TransactionDateTime =datetime.now(self.pacific_time).strftime(self.fmt)
+        TransactionDateTime =datetime.now(pacific_time).strftime(fmt)
         Amount = random.choice([0.25, 0.5,1,1.5,2,3])
         PaymentMean = random.choice(['CREDIT CARD', 'PHONE', 'CASH'])
-        PaidDuration = random.randint(1, 10800)
+        max_duration_sec = 60 * 60 * 3
+        PaidDuration = random.randint(1, max_duration_sec)
         ElementKey = MeterCode
-        data_send = ",".join(map(str,[DataId,MeterCode,TransactionId,TransactionDateTime,Amount,'',
-                                      PaymentMean,PaidDuration,ElementKey,'2019','4','']))
-        print (data_send)
+        record = [DataId,MeterCode,TransactionId,TransactionDateTime,Amount,'',
+                    PaymentMean,PaidDuration,ElementKey,'2019','4','']
+        data_send = ",".join(map(str, record))
+        
         self.increment += 1
-        return data_send
-
-    def send(self):
-        self.producer.send('my-topic', self.generate().encode())
+        
+        print (data_send)
+        
+        key = str(MeterCode).encode()
+        value = data_send.encode()
+        return key, value
     
-def __main__():
-    limit = 0
-    datagen = GenerateStreaming()
-    while limit < 10:
-        datagen.send()
-        limit += 1
-        time.sleep(1)
+limit = 0
+datagen = GenerateData()
+while True:
+    producer.send('paid-transaction', *datagen.run())
+    limit += 1
+    time.sleep(.5)
+
+
+
+
+
