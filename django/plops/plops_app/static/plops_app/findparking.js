@@ -29,6 +29,9 @@ function createParkingMarkers(slots){
 
 function createMarker(slot){
     var contentString = "<b>Location</b><br>" + slot.station_address;
+    contentString = contentString + "<br><b>Available / Total Spaces</b>";
+    contentString = contentString + "<br>" + slot.available_spots + " / " + slot.space_count;
+    contentString = contentString + "<br><b>Update time</b><br>" + slot.timestamp;
     var image = '/static/plops_app/image/icon-parking.png'
     var marker = new google.maps.Marker({
         position: new google.maps.LatLng(slot.location_lat, slot.location_lng),
