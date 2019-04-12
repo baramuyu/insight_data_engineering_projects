@@ -6,7 +6,7 @@ function findParking(latLng){
     console.log('finding parking.', latLng);
     var lat = latLng.lat().toString()
     var lng = latLng.lng().toString()
-    var url = `/app/api?lat=${lat}&lng=${lng}`;
+    var url = `/api?lat=${lat}&lng=${lng}`;
     console.log("url:" + url)
     $.get(url, function(data, status){
         createParkingMarkers(data.slots)
@@ -28,11 +28,17 @@ function createParkingMarkers(slots){
 }
 
 function createMarker(slot){
-    var contentString = "<b>Location</b><br>" + slot.station_address;
-    contentString = contentString + "<br><b>Available / Total Spaces</b>";
-    contentString = contentString + "<br>" + slot.available_spots + " / " + slot.space_count;
-    contentString = contentString + "<br><b>Update time</b><br>" + slot.timestamp;
-    var image = '/static/plops_app/image/icon-parking.png'
+    var date = new Date( Date.parse(slot.timestamp) );
+    var contentString = "<b>" + slot.station_address + "</b>";
+    contentString = contentString + "<br><br>Available / Total Spaces";
+    contentString = contentString + "<br><b>" + slot.available_spots + " / " + slot.space_count + "</b>";
+    contentString = contentString + "<br><br>Update time: " + date.toLocaleTimeString();
+    var image;
+    if (slot.available_spots > 0){
+        image = '/static/plops_app/image/icon-parking.png'
+    }else{
+        image = '/static/plops_app/image/icon-full.png'
+    }
     var marker = new google.maps.Marker({
         position: new google.maps.LatLng(slot.location_lat, slot.location_lng),
         map: map,
