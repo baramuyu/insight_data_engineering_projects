@@ -30,10 +30,11 @@ function createParkingMarkers(slots){
 
 function createMarker(slot){
     var date = new Date( Date.parse(slot.timestamp) );
-    var contentString = "<b>" + slot.station_address + "</b>";
-    contentString = contentString + "<br><br>Available / Total Spaces";
-    contentString = contentString + "<br><b>" + slot.available_spots + " / " + slot.space_count + "</b>";
-    contentString = contentString + "<br><br>Update time: " + date.toLocaleTimeString();
+    var popup = "<b>" + slot.station_address + "</b>";
+    popup = popup + "<br><b>"+ slot.distance_f +" feet away</b> ";
+    popup = popup + "<br>Available / Total Spaces: ";
+    popup = popup + "<b>" + slot.available_spots + " / " + slot.space_count + "</b>";
+    popup = popup + "<br>Update time: " + date.toLocaleTimeString();
     var image;
     if (slot.available_spots > 0){
         image = '/static/plops_app/image/icon-parking.png'
@@ -49,7 +50,7 @@ function createMarker(slot){
     });
     
     google.maps.event.addListener(marker, 'click', function() {
-        infowindow.setContent(contentString); 
+        infowindow.setContent(popup); 
         infowindow.open(map, marker);
         query_for_charts(slot)
     });    
