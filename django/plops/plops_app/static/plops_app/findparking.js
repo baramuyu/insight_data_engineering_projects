@@ -25,6 +25,7 @@ function createParkingMarkers(slots){
     slots.forEach(function(slot){
         slot_markers.push(createMarker(slot))
     })
+    
 }
 
 function createMarker(slot){
@@ -50,6 +51,7 @@ function createMarker(slot){
     google.maps.event.addListener(marker, 'click', function() {
         infowindow.setContent(contentString); 
         infowindow.open(map, marker);
+        query_for_charts(slot)
     });    
     return marker;
 }

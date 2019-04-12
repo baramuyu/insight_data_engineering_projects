@@ -17,3 +17,10 @@ class APIView(View):
         lat, lng = request.GET['lat'], request.GET['lng']
         results = services.fetchRealTimeData(lat, lng)
         return JsonResponse({'slots':results})
+
+class HourlyAPIView(View):
+
+    def get(self, request, *args, **kwargs):
+        id = request.GET['id']
+        results = services.fetchHourlyData(id)
+        return JsonResponse({'hourly':results})

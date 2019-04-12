@@ -37,4 +37,22 @@ def fetchRealTimeData(lat, lng):
         return records
     except Exception as e:
         raise
+
+        
+def fetchHourlyData(id):
+    params = get_params()
+    pgres = postgresdb.PostgresAdapter(**params)
+    try:       
+        sql = ("SELECT station_id, hour, round(avg(occupancy),0) as occupied_spots "
+                "FROM hist_occupancy "
+                "WHERE station_id = ({station_id}) "
+                "AND day_of_week = EXTRACT(DOW FROM current_date) "
+                "GROUP BY station_id, hour "
+                "ORDER BY station_id, hour "
+              ).format(station_id=id)
+        print ("sql: ",sql)
+        records = pgres.execute(sql, json_format=True)
+        return records
+    except Exception as e:
+        raise
         
