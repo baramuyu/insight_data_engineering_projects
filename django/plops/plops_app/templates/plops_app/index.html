@@ -7,24 +7,18 @@
     <meta charset="utf-8">
     <link rel="stylesheet" type="text/css" href="{% static "plops_app/index.css" %}">
     <script src="{% static "plops_app/index.js" %}"></script>
-    <style>
-
-    </style>
+    <script src="{% static "plops_app/findparking.js" %}"></script>
+    <script src="{% static "plops_app/hourly_chart.js" %}"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0/dist/Chart.min.js"></script>
   </head>
   <body>
-    <div id="map"></div>
-    {% if results %}
-        <ul>
-        {% for rec in results %}
-            {{ rec }}<br>
-        {% empty %}
-            Nothing found
-        {% endfor %}
-        </ul>
-
-    {% else %}
-        <p>No data is available.</p>
-    {% endif %}
+      <h1>PLOPS</h1>
+      <h2>Parking Lot Occupancy Project in Seattle</h2>
+      <h3>Please click anywhere on the map you want to park.</h3>
+      
+      <div id="map"></div>
+      <div><canvas id="myChart" width="800px" height="250px"></canvas></div>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmNdArjF7FIWi77hBu3AGvkuXOqLE9rLo&callback=initMap"
     async defer></script>
   </body>
