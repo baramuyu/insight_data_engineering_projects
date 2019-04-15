@@ -58,7 +58,7 @@ class ProcessHistOccupancyData(object):
         return df
     
     def write_to_postgres(self, out_df):
-        table = "hist_occupancy"
+        table = "spark_out_hist_occupancy"
         mode = "append"
         
         connector = postgres.PostgresConnector()

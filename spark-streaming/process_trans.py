@@ -48,11 +48,19 @@ class ProcessTrans(object):
         df = df.select('station_id', 'transaction_endtime')
         return df
        
-    def get_dimension_table(self):
-        self.pgres_connector.set_spark(self.spark)
-        dim_df = self.pgres_connector.read(table="dim_stations")
-        dim_df = dim_df.select('station_id')
-        return dim_df
+    def get_all_station_ids(self, sparkContext):
+        def _fetch_dimension_table():
+            self.pgres_connector.set_spark(self.spark)
+            dim_df = self.pgres_connector.read(table="dim_stations")
+            return dim_df.select('station_id').collect()
+        
+        # get from global variables, if doesn't exist, get from DB.
+        if ("dim_stations" not in globals()):
+            dim_df = _fetch_dimension_table()
+            globals()["dim_stations"] = sparkContext.broadcast(dim_df) 
+            
+        dim_rows = globals()["dim_stations"]
+        return self.spark.createDataFrame(dim_rows.value)
     
     def create_occupancy_df(self, dim_df):
         datetime_now = datetime.now(timezone('America/Los_Angeles')).replace(tzinfo=None)
@@ -86,12 +94,12 @@ class ProcessTrans(object):
         trans_rdd = trans_df.rdd
         return trans_rdd
         
-    def update_db(self, occupancy):
+    def update_db(self, occupancy_rdd):
         print("*** UPDATE DB START***** ")
         print(datetime.now().isoformat())   
         
-        occupancy_df = self.spark.createDataFrame(occupancy)
-        dim_df = self.get_dimension_table()
+        occupancy_df = self.spark.createDataFrame(occupancy_rdd)
+        dim_df = self.get_all_station_ids(occupancy_rdd.context)
         all_stations_df = self.create_occupancy_df(dim_df)
         live_df = self.join_occupancy_df_with_all_stations(occupancy_df, all_stations_df)
         

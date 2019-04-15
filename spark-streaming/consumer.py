@@ -27,9 +27,8 @@ class KafkaConsumer(object):
 
         self.ssc = StreamingContext(self.sc, batchDuration)
         self.ssc.checkpoint("hdfs://10.0.0.11:9000/checkpoint")
-    
         self.conf = self.get_kafka_consumer_setting()
-
+        
     def get_kafka_consumer_setting(self):
         return {'brokers': '10.0.0.8:9092, 10.0.0.5:9092',
                      'topic': 'paid-transaction',
@@ -54,8 +53,10 @@ class KafkaConsumer(object):
     def run(self):
         def _updateState(newValues, lastValues):
             datetime_now = datetime.now(timezone('America/Los_Angeles')).replace(tzinfo=None)
+
             transaction_endtime = newValues or [] + lastValues or []
             transaction_endtime = [endtime for endtime in transaction_endtime if endtime > datetime_now]
+            
             if len(transaction_endtime) > 0:
                 return transaction_endtime
             else:
