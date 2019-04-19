@@ -1,8 +1,18 @@
-# Finding a parking spot in Seattle
+# PLOPS: Parking Lot Occupancy Project in Seattle
 
 * **Where can I find a parking spot near me?**
 * **Where is a street/block to find a parking spot right now? or in 1 hour?**
 * **How much will parking cost?**
+
+*This project is a part of **Data Engineering Program** run by Insight Data Engineering Program.
+(Spring Session in Seattle, 2019)*
+
+PLOPS is running here: [plops.beehives.dev](plops.beehives.dev)
+
+## UI
+Point where you'd like park on a map.
+
+![alt text](images/screenshot_PLOPS.png "plops")
 
 ## Data Source
 
@@ -21,8 +31,8 @@
 
 #### Street Parking Transaction data (Raw data)
 [Data Source Link](http://www.seattle.gov/Documents/Departments/SDOT/ParkingProgram/data/SeattlePaidTransactMetadata.pdf)
-* About 13 million records in a year. (~11.1GB)
-* Approx total of 90 million records since 2012. (~80GB)
+* Updated daily in the morning.
+* PLOPS uses this schema and simulates as real-time. 
 
 | TimeStamp | Station ID | Amount $ | Paid Duration(sec)
 |:----------|:---------------|---------:|--------------:|
@@ -30,9 +40,25 @@
 | 12/01/2018 13:44:03 | 1 | 4 | 7200
 | 12/01/2018 14:21:53 | 2 | 3 | 3600
 
-# Pipeline
+## Pipeline
 ![alt text](images/Week3Archtechture.jpg "workflow")
 
+## How to run PLOPS
 
+* Simulate transaction data
+```
+./kafka/producer.py
+```
 
-
+* Update Live data
+```
+./spark-streaming/run_spark_streaming.sh
+```
+* Update Batch data
+```
+./spark-batches/run_batch_process.sh
+```
+* Start Web Server
+```
+python ./django/plops/manage.py runserver 0:8000
+```
