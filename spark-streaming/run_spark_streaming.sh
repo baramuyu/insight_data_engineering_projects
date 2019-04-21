@@ -1,1 +1,1 @@
-spark-submit --packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.3.1 consumer.py
+spark-submit --packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.3.1 --master spark://ip-10-0-0-11:7077 --num-executors 4 --executor-memory 6G --driver-memory 6G consumer.py

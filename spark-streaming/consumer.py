@@ -54,11 +54,9 @@ class KafkaConsumer(object):
         def _updateState(newValues, lastValues):
             datetime_now = datetime.now(timezone('America/Los_Angeles')).replace(tzinfo=None)
 
-            transaction_endtime = newValues or [] + lastValues or []
-            transaction_endtime = [endtime for endtime in transaction_endtime if endtime > datetime_now]
-            
-            if len(transaction_endtime) > 0:
-                return transaction_endtime
+            transaction_endtime = (newValues or []) + (lastValues or [])
+            if transaction_endtime:
+                return [endtime for endtime in transaction_endtime if endtime and endtime > datetime_now]
             else:
                 return None # delete key
         

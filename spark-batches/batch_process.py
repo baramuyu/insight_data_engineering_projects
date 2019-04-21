@@ -41,7 +41,7 @@ class ProcessHistOccupancyData(object):
         self.file_name = file_name
 
     def read_csv_from_s3(self):
-        file_name = "s3a://project.datasets/{file_name}".format(file_name=self.file_name)
+        file_name = "s3n://project.datasets/{file_name}".format(file_name=self.file_name)
         mode = "PERMISSIVE"
         if DEBUG:
             mode = "FAILFAST"
@@ -81,7 +81,7 @@ def run():
     parser.add_argument("--file", help="file name to process")
     args = parser.parse_args()
     
-    file_name = args.file if args.file else "2019-Paid-Parking-Occupancy.csv.gz"
+    file_name = args.file if args.file else "2019-Paid-Parking-Occupancy.csv"
     if args.debug:
         DEBUG = True 
         file_name = 'small_data/last_48h.csv.gz' # smaller file
