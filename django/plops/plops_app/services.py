@@ -1,37 +1,57 @@
 import postgresdb
 import os
 
-def fetchData():
-    params = {
+def get_params():
+    return {
         'dbname': 'occupancy',
-        'user': 'web_server',
+        'user': 'spark_user',
         'password': os.environ['POSTGRES_PASS'],
         'host': 'ec2-52-39-242-144.us-west-2.compute.amazonaws.com'
     }
+
+def fetchRealTimeData(lat, lng):
+    params = get_params()
     pgres = postgresdb.PostgresAdapter(**params)
-    #pgres = PostgresAdapter(**params)
-    try:
-        sql = ("select d.station_address, round(avg(h.occupancy),1) as average_occupancy, d.space_count, d.location, h.station_id " 
-                "from hist_occupancy h left join dim_stations d on h.station_id = d.station_id "
-                "where h.station_id = 34214 "
-                "and h.timestamp between '2019-01-18 13:00:00'::timestamp AND '2019-01-18 14:00:00'::timestamp "
-                "group by h.station_id, d.space_count, d.location, d.station_address ")
+    try:       
+        sql = ("(SELECT d.station_id, (d.space_count - lv.occupied_spots) AS available_spots, "
+                "d.location_lat, d.location_lng, d.station_address, d.space_count, lv.timestamp, 1 as availability, "
+                "CAST(ST_Distance(d.location_geom, ST_Transform(ST_SetSRID(ST_MakePoint({lng},{lat}),4326),2163)) * 3.28084 as int) as distance_f "
+                "FROM live_occupancy lv LEFT JOIN dim_stations d "
+                "ON d.station_id = lv.station_id "
+                "WHERE d.space_count - lv.occupied_spots > 0 "
+                "ORDER BY ST_Distance(d.location_geom, ST_Transform(ST_SetSRID(ST_MakePoint({lng},{lat}),4326),2163)) "
+                "LIMIT 10 ) "
+                "UNION "
+                "(SELECT d.station_id, (d.space_count - lv.occupied_spots) AS available_spots, "
+                "d.location_lat, d.location_lng, d.station_address, d.space_count, lv.timestamp, 0 as availability, "
+                "CAST(ST_Distance(d.location_geom, ST_Transform(ST_SetSRID(ST_MakePoint({lng},{lat}),4326),2163)) * 3.28084 as int) as distance_f "
+                "FROM live_occupancy lv LEFT JOIN dim_stations d "
+                "ON d.station_id = lv.station_id "
+                "WHERE d.space_count - lv.occupied_spots <= 0 "
+                "AND ST_Distance(d.location_geom, ST_Transform(ST_SetSRID(ST_MakePoint({lng},{lat}),4326),2163)) < 400 "
+                "ORDER BY ST_Distance(d.location_geom, ST_Transform(ST_SetSRID(ST_MakePoint({lng},{lat}),4326),2163)) "
+                "LIMIT 10 ) "
+              ).format(lng=lng, lat=lat)
+        print ("sql: ",sql)
         records = pgres.execute(sql, json_format=True)
-        sql = ("select d.station_address, h.occupied_spots, d.space_count, d.location, h.station_id "
-                "from live_occupancy h left join dim_stations d on h.station_id = d.station_id "
-                "where h.station_id = 13261 "
-                "and h.timestamp = '2019-04-05 12:51:00'::timestamp ")
-        hist_records = pgres.execute(sql, json_format=True)
-        records += hist_records
+        return records
+    except Exception as e:
+        raise
+
         
-        for rec in records:
-            print('rec: ',rec)
-            # extract lat and long from "POINT (47.60580762 -122.33341762)" 
-            loc = rec['location'].replace("(","").replace(")","").split()[1:]
-            rec['location_lat'] = float(loc[0])
-            rec['location_lng'] = float(loc[1])
-            del rec['location']
-        
+def fetchHourlyData(id):
+    params = get_params()
+    pgres = postgresdb.PostgresAdapter(**params)
+    try:       
+        sql = ("SELECT station_id, hour, round(avg(occupancy),0) as occupied_spots "
+                "FROM hist_occupancy "
+                "WHERE station_id = ({station_id}) "
+                "AND day_of_week = EXTRACT(DOW FROM current_date) "
+                "GROUP BY station_id, hour "
+                "ORDER BY station_id, hour "
+              ).format(station_id=id)
+        print ("sql: ",sql)
+        records = pgres.execute(sql, json_format=True)
         return records
     except Exception as e:
         raise
