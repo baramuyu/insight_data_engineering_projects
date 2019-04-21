@@ -7,7 +7,7 @@ var infowindow;
 function initMap() {
     // set center in Seattle
     var myOptions = {
-        zoom: 13,
+        zoom: 14,
         center: new google.maps.LatLng(47.619293, -122.324732),
         mapTypeControl: true,
         mapTypeControlOptions: {style: google.maps.MapTypeControlStyle.DROPDOWN_MENU},
