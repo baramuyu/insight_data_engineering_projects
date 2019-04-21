@@ -36,7 +36,7 @@ class GenerateData():
         TransactionDateTime =datetime.now(pacific_time).strftime(fmt)
         Amount = random.choice([0.25, 0.5,1,1.5,2,3])
         PaymentMean = random.choice(['CREDIT CARD', 'PHONE', 'CASH'])
-        max_duration_sec = 60 * 60 * 3
+        max_duration_sec = 60 * 60 * 6 
         PaidDuration = random.randint(1, max_duration_sec)
         ElementKey = MeterCode
         record = [DataId,MeterCode,TransactionId,TransactionDateTime,Amount,'',
@@ -56,7 +56,7 @@ datagen = GenerateData()
 while True:
     producer.send('paid-transaction', *datagen.run())
     limit += 1
-    time.sleep(.5)
+    time.sleep(.1)
 
 
 
