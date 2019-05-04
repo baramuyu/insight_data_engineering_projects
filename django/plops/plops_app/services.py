@@ -46,9 +46,9 @@ def fetchHourlyData(id):
         sql = ("SELECT station_id, hour, round(avg(occupancy),0) as occupied_spots "
                 "FROM hist_occupancy "
                 "WHERE station_id = ({station_id}) "
-                "AND day_of_week = EXTRACT(DOW FROM current_date) "
+                "AND day_of_week = EXTRACT(DOW FROM current_timestamp AT TIME ZONE 'US/Pacific') + 1 "
                 "GROUP BY station_id, hour "
-                "ORDER BY station_id, hour "
+                "ORDER BY hour "
               ).format(station_id=id)
         print ("sql: ",sql)
         records = pgres.execute(sql, json_format=True)

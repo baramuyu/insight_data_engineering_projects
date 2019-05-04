@@ -30,7 +30,7 @@ function createParkingMarkers(slots){
 
 function createMarker(slot){
     var date = new Date( Date.parse(slot.timestamp) );
-    var popup = "<b>" + slot.station_address + "</b>";
+    var popup = slot.station_address;
     popup = popup + "<br><b>"+ slot.distance_f +" feet away</b> ";
     popup = popup + "<br>Available / Total Spaces: ";
     popup = popup + "<b>" + slot.available_spots + " / " + slot.space_count + "</b>";
